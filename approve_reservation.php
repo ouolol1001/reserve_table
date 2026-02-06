@@ -2,16 +2,22 @@
 session_start();
 include "db.php";
 
-if(!isset($_SESSION['user_id']) || $_SESSION['role']!=='admin'){
+// 只允许 admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     die("Access denied");
 }
 
-$id = intval($_POST['id']);
+if (!isset($_GET['id'])) {
+    die("Invalid request");
+}
 
+$reservation_id = intval($_GET['id']);
+
+// 更新状态为 approved
 $stmt = $conn->prepare("UPDATE reservations SET status='approved' WHERE id=?");
-$stmt->bind_param("i",$id);
+$stmt->bind_param("i", $reservation_id);
 $stmt->execute();
 
-// 重定向回 admin 页面，避免刷新重复提交
+// 回到 admin dashboard
 header("Location: admin_reservations.php");
 exit;

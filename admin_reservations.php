@@ -1,15 +1,18 @@
 <?php
-session_start();
 include "db.php";
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin'){ die("Access denied"); }
+include "auth.php";
 
-// 获取预约
+// 检查角色
+check_role('admin');
+
+// 获取预约，包括 guest
 $stmt = $conn->prepare("
-SELECT r.id, r.reservation_date, r.reservation_time, r.guest_count, r.status, t.table_number, u.name AS customer_name
+SELECT r.id, r.reservation_date, r.reservation_time, r.guest_count, r.status, t.table_number,
+       COALESCE(u.name, r.guest_name) AS customer_name
 FROM reservations r
-JOIN users u ON r.user_id = u.id
+LEFT JOIN users u ON r.user_id = u.id
 JOIN tables t ON r.table_id = t.id
-ORDER BY r.reservation_date, r.reservation_time
+ORDER BY r.id DESC
 ");
 $stmt->execute();
 $reservations = $stmt->get_result();
